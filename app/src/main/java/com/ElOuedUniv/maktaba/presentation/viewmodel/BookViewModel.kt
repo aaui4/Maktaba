@@ -9,49 +9,40 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/**
- * ViewModel for managing book-related UI state
- * This follows the MVVM pattern where ViewModel acts as a bridge between
- * the UI and the business logic (Use Cases)
- */
 class BookViewModel(
     private val getBooksUseCase: GetBooksUseCase
 ) : ViewModel() {
 
-    // Private mutable state for internal use
     private val _books = MutableStateFlow<List<Book>>(emptyList())
-    
-    // Public immutable state for UI observation
     val books: StateFlow<List<Book>> = _books.asStateFlow()
 
-    // Loading state
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private val _totalBooks = MutableStateFlow(0)
+    val totalBooks: StateFlow<Int> = _totalBooks.asStateFlow()
+
+    private val _totalPages = MutableStateFlow(0)
+    val totalPages: StateFlow<Int> = _totalPages.asStateFlow()
+
     init {
-        // Load books when ViewModel is created
         loadBooks()
     }
 
-    /**
-     * Load all books from the use case
-     */
     private fun loadBooks() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
                 val bookList = getBooksUseCase()
                 _books.value = bookList
+                _totalBooks.value = bookList.size
+                _totalPages.value = bookList.sumOf { it.nbPages }
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    /**
-     * Refresh the books list
-     * Can be called from UI to reload data
-     */
     fun refreshBooks() {
         loadBooks()
     }
