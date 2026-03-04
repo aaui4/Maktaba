@@ -79,12 +79,21 @@ fun CategoryList(
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        // عرض عدد الفئات أولاً
+        item {
+            Text(
+                text = "Total Categories: ${categories.size}",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
+
+        // عرض جميع العناصر
         items(categories) { category ->
             CategoryItem(category = category)
         }
     }
 }
-
 @Composable
 fun CategoryItem(category: Category) {
     Card(
