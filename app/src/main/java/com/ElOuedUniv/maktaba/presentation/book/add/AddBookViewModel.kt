@@ -21,15 +21,26 @@ class AddBookViewModel @Inject constructor(
         when (action) {
             is AddBookUiAction.OnTitleChange -> {
                 _uiState.update { it.copy(title = action.title) }
+                validateInputs()
             }
             is AddBookUiAction.OnIsbnChange -> {
                 _uiState.update { it.copy(isbn = action.isbn) }
+                validateInputs()
             }
             is AddBookUiAction.OnPagesChange -> {
                 _uiState.update { it.copy(nbPages = action.pages) }
+                validateInputs()
             }
             AddBookUiAction.OnAddClick -> {
-                addBook()
+                if (_uiState.value.isFormValid) {
+                    addBook()
+                }
+            }
+            is AddBookUiAction.OnImageUrlChange -> {
+                _uiState.update { it.copy(imageUrl = action.imageUrl) }
+            }
+            is AddBookUiAction.OnStatusChange -> {
+                _uiState.update { it.copy(status = action.status) }
             }
         }
     }
@@ -39,9 +50,45 @@ class AddBookViewModel @Inject constructor(
         val book = Book(
             isbn = currentState.isbn,
             title = currentState.title,
-            nbPages = currentState.nbPages.toIntOrNull() ?: 0
-        )
+            nbPages = currentState.nbPages.toIntOrNull() ?: 0,
+            status = currentState.status
+            )
         addBookUseCase(book)
         _uiState.update { it.copy(isSuccess = true) }
+    }
+
+    private fun isFormValid(state: AddBookUiState): Boolean {
+        return state.titleError == null &&
+                state.isbnError == null &&
+                state.pagesError == null &&
+                state.title.isNotBlank() &&
+                state.isbn.isNotBlank()
+    }
+
+    private fun validateInputs() {
+        val state = _uiState.value
+
+        val titleError = if (state.title.isBlank()) {
+            "Title cannot be empty"
+        } else null
+
+        val isbnError = if (state.isbn.length != 13 || !state.isbn.all { it.isDigit() }) {
+            "ISBN must be 13 digits"
+        } else null
+
+        val pagesError = if (state.nbPages.toIntOrNull() == null || state.nbPages.toInt() <= 0) {
+            "Pages must be positive"
+        } else null
+
+        val isValid = titleError == null && isbnError == null && pagesError == null
+
+        _uiState.update {
+            it.copy(
+                titleError = titleError,
+                isbnError = isbnError,
+                pagesError = pagesError,
+                isFormValid = isValid
+            )
+        }
     }
 }

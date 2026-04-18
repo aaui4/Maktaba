@@ -16,6 +16,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ElOuedUniv.maktaba.data.model.Book
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,71 +88,74 @@ fun BookListView(
     }
 }
 
+
+
 @Composable
 fun BookList(
     books: List<Book>,
     onBookClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(2),
         modifier = modifier,
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(books) { book ->
-            BookItem(book = book, onClick = { onBookClick(book.isbn) })
+            BookItem(
+                book = book,
+                onClick = { onBookClick(book.isbn) }
+            )
         }
     }
 }
+
 
 @Composable
 fun BookItem(book: Book, onClick: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        onClick = onClick,
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        onClick = onClick
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+            modifier = Modifier.padding(8.dp)
         ) {
+
+            //  صورة في الأعلى
+            AsyncImage(
+                model = book.imageUrl,
+                contentDescription = book.title,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            //  المعلومات تحت الصورة
             Text(
                 text = book.title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+                style = MaterialTheme.typography.titleMedium
             )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-              ) {
-                Column {
-                    Text(
-                        text = "ISBN:",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = if (book.isbn.isEmpty()) "Not set" else book.isbn,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-                
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "Pages:",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = if (book.nbPages == 0) "Not set" else "${book.nbPages}",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = "ISBN: ${book.isbn}",
+                style = MaterialTheme.typography.bodySmall
+            )
+
+            Text(
+                text = "Pages: ${book.nbPages}",
+                style = MaterialTheme.typography.bodySmall
+            )
+            Text(
+                text = book.status ?: "",
+                style = MaterialTheme.typography.labelSmall
+            )
         }
     }
 }

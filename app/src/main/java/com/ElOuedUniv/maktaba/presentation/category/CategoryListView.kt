@@ -16,6 +16,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ElOuedUniv.maktaba.data.model.Category
 import com.ElOuedUniv.maktaba.presentation.category.CategoryViewModel
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.res.painterResource
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,30 +89,41 @@ fun CategoryList(
     }
 }
 
+
 @Composable
 fun CategoryItem(category: Category) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(6.dp)
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = category.name,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
+
+            Icon(
+                painter = painterResource(id = category.iconRes),
+                contentDescription = category.name,
+                modifier = Modifier.size(40.dp),
+                tint = MaterialTheme.colorScheme.primary
             )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = category.description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+
+            Column {
+                Text(
+                    text = category.name,
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = category.description,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
         }
     }
 }
