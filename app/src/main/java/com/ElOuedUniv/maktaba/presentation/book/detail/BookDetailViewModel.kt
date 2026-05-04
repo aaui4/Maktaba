@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class BookDetailViewModel @Inject constructor(
@@ -25,9 +27,20 @@ class BookDetailViewModel @Inject constructor(
     }
 
     private fun loadBook() {
+
         _uiState.update { it.copy(isLoading = true) }
-        val book = getBookByIsbnUseCase(isbn)
-        _uiState.update { it.copy(isLoading = false, book = book) }
+
+        viewModelScope.launch {
+
+            val book = getBookByIsbnUseCase(isbn)
+
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    book = book
+                )
+            }
+        }
     }
 
     fun onAction(action: BookDetailUiAction) {

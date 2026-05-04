@@ -10,5 +10,6 @@ data class BookUiState(
     val books: List<Book> = emptyList(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val isAddingBook: Boolean = false // State for the FAB form
+    val isBookAdded: Boolean = false,
+    val isAddingBook: Boolean = false
 )

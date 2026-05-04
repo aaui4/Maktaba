@@ -8,17 +8,27 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @HiltViewModel
 class AddBookViewModel @Inject constructor(
-    private val addBookUseCase: AddBookUseCase
+    private val addBookUseCase: AddBookUseCase,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
-    
+
     private val _uiState = MutableStateFlow(AddBookUiState())
     val uiState = _uiState.asStateFlow()
 
     fun onAction(action: AddBookUiAction) {
         when (action) {
+            is AddBookUiAction.OnImageSelected -> {
+                _uiState.update { it.copy(selectedImageUri = action.uri) }
+            }
             is AddBookUiAction.OnTitleChange -> {
                 _uiState.update { it.copy(title = action.title) }
                 validateInputs()
@@ -31,6 +41,7 @@ class AddBookViewModel @Inject constructor(
                 _uiState.update { it.copy(nbPages = action.pages) }
                 validateInputs()
             }
+
             AddBookUiAction.OnAddClick -> {
                 if (_uiState.value.isFormValid) {
                     addBook()
@@ -49,7 +60,7 @@ class AddBookViewModel @Inject constructor(
         val pagesInt = nbPages.toIntOrNull()
         val pagesError = if (pagesInt == null || pagesInt <= 0) "Pages must be a positive number" else null
 
-        _uiState.update { 
+        _uiState.update {
             it.copy(
                 titleError = titleError,
                 isbnError = isbnError,
@@ -61,12 +72,36 @@ class AddBookViewModel @Inject constructor(
 
     private fun addBook() {
         val currentState = _uiState.value
+
         val book = Book(
             isbn = currentState.isbn,
             title = currentState.title,
             nbPages = currentState.nbPages.toIntOrNull() ?: 0
         )
-        addBookUseCase(book)
-        _uiState.update { it.copy(isSuccess = true) }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+
+            try {
+                val imageBytes = withContext(Dispatchers.IO) {
+                    currentState.selectedImageUri?.let { uri ->
+                        context.contentResolver.openInputStream(uri)?.use {
+                            it.readBytes()
+                        }
+                    }
+                }
+
+                addBookUseCase(book, imageBytes)
+
+                _uiState.update {
+                    it.copy(isSuccess = true, isLoading = false)
+                }
+
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(errorMessage = e.message, isLoading = false)
+                }
+            }
+        }
     }
 }
